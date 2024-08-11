@@ -14,7 +14,6 @@ const Signup = () => {
 
   const [error, setError] = useState(null);
 
-  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -59,6 +58,7 @@ const Signup = () => {
             <input
               type="text"
               id="name"
+              autoComplete='name'
               name="name"
               value={formData.name}
               onChange={handleInputChange}
@@ -71,6 +71,7 @@ const Signup = () => {
             <input
               type="email"
               id="email"
+              autoComplete='email'
               name="email"
               value={formData.email}
               onChange={handleInputChange}

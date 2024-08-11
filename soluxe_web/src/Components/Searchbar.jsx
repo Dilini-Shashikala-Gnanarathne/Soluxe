@@ -1,27 +1,57 @@
-import React from 'react';
-import { useState } from 'react';
-import Form from 'react-bootstrap/Form';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import './Searchbar.css'
-import 'bootstrap/dist/css/bootstrap.min.css';
+import React, { useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Form, Row, Col, Button, Offcanvas } from 'react-bootstrap';
 import { FaUser } from "react-icons/fa";
 import { FaCartShopping } from "react-icons/fa6";
-import Login from '../Pages/Login';
-import { useNavigate } from 'react-router-dom';
-import Button from 'react-bootstrap/Button';
-import Offcanvas from 'react-bootstrap/Offcanvas';
+import { UserContext } from './UserProvider';
+import './Searchbar.css';
+
 export default function Searchbar() {
-  const navigate= useNavigate();
-  const handleUserIconClick = () =>{
+  const { isLoggedIn, logout, token } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const [showCart, setShowCart] = useState(false);
+  const [showUser, setShowUser] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+
+  const handleCartClose = () => setShowCart(false);
+  const handleCartShow = () => setShowCart(true);
+
+  const handleUserClose = () => setShowUser(false);
+
+  const handleUserShow = async () => {
+    if (isLoggedIn) {
+      try {
+        const response = await fetch('http://localhost:3001/api/user', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched data:', data); 
+          setUserName(data.data.name); // Assuming the API returns the user data under the `data` key
+          setUserEmail(data.data.email); // Assuming the API returns the user data under the `data` key
+          setShowUser(true);
+        } else {
+          console.error('Failed to fetch user details');
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleLogOut = () => {
+    logout();
     navigate('/login');
-  }
-  const handleUserCartClick = () =>{
-    navigate('/cart');
-  }
-  const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  };
+
   return (
     <div className='searchbar'>
       <Form inline>
@@ -30,29 +60,39 @@ export default function Searchbar() {
             <Form.Control
               type="text"
               placeholder="Search"
-              className=" mr-sm-2"
+              className="mr-sm-2"
             />
             <i className="fas fa-search search-icon"></i>
-            <FaUser className='user_icon' onClick={handleUserIconClick}/>
-            <div>
-              <FaCartShopping className='cart_icon'  onClick={handleShow}/>
-              <Offcanvas  show={show} onHide={handleClose} backdrop="static" placement='end' >
+
+            <FaUser className='user_icon' onClick={handleUserShow} />
+            <Offcanvas show={showUser} onHide={handleUserClose} backdrop="static" placement='end'>
               <Offcanvas.Header closeButton>
-              <Offcanvas.Title>Cart</Offcanvas.Title>
+                <Offcanvas.Title>User Details</Offcanvas.Title>
               </Offcanvas.Header>
               <Offcanvas.Body>
-              Added Items will appear here
+                <div className="user-info">
+                  <span className="user-name">Name: {userName}</span>
+                  <br />
+                  <span className="user-email">Email: {userEmail}</span>
+                  <Button variant="outline-secondary" onClick={handleLogOut} className="ml-2">Logout</Button>
+                </div>
               </Offcanvas.Body>
-             </Offcanvas>
+            </Offcanvas>
 
+            <div>
+              <FaCartShopping className='cart_icon' onClick={handleCartShow} />
+              <Offcanvas show={showCart} onHide={handleCartClose} backdrop="static" placement='end'>
+                <Offcanvas.Header closeButton>
+                  <Offcanvas.Title>Cart</Offcanvas.Title>
+                </Offcanvas.Header>
+                <Offcanvas.Body>
+                  Added Items will appear here
+                </Offcanvas.Body>
+              </Offcanvas>
             </div>
-            
           </Col>
-          
-          
         </Row>
-        
       </Form>
     </div>
-  )
+  );
 }
