@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Row, Col, Button, Offcanvas } from 'react-bootstrap';
 import { FaUser } from "react-icons/fa";
 import { FaCartShopping } from "react-icons/fa6";
-import { UserContext } from './UserProvider';
+import { useAuth } from '../context/AuthContext';
 import './Searchbar.css';
 
 export default function Searchbar() {
-  const { isLoggedIn, logout, token } = useContext(UserContext);
+  const { isLoggedIn, logout, user } = useAuth();  // Destructure the user instead of token
   const navigate = useNavigate();
 
   const [showCart, setShowCart] = useState(false);
@@ -21,27 +21,10 @@ export default function Searchbar() {
   const handleUserClose = () => setShowUser(false);
 
   const handleUserShow = async () => {
-    if (isLoggedIn) {
-      try {
-        const response = await fetch('http://localhost:3001/api/user', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Fetched data:', data); 
-          setUserName(data.data.name); // Assuming the API returns the user data under the `data` key
-          setUserEmail(data.data.email); // Assuming the API returns the user data under the `data` key
-          setShowUser(true);
-        } else {
-          console.error('Failed to fetch user details');
-        }
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-      }
+    if (isLoggedIn && user) {  // Ensure user data exists
+      setUserName(user.name);  // Use data from context instead of making another API call
+      setUserEmail(user.email);
+      setShowUser(true);
     } else {
       navigate('/login');
     }
